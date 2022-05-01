@@ -1,4 +1,4 @@
-from avl_skeleton import AVLTreeList
+from AVLTreeList import AVLTreeList
 import unittest
 
 
@@ -1088,7 +1088,6 @@ class testAVLList(unittest.TestCase):
 
     # def test_compare_treelist_and_list(self):
         # self.assertEqual (self.TR1.listToArray(),self.LR1)
-
     TR1.concat(TR2)
     LR3 = LR1 + LR2
 
@@ -1258,7 +1257,6 @@ class testAVLList(unittest.TestCase):
             T3.append(i)
         self.assertEqual(abs(T3.getRoot().getHeight() -
                              T4.getRoot().getHeight()), T3.concat(T4))
-
     ### TESTING SPLIT ###
     def check_root(self, tree):
         if not tree.empty():
