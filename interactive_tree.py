@@ -1,4 +1,4 @@
-from avl_skeleton import AVLTreeList
+from AVLTreeList import AVLTreeList
 
 """
 IN ORDER TO USE THE INTERACTIVE TREE TOU NEED TO HAVE A PRINT METHOD IN YOUR AVLTreeList CLASS AND NAME IT
