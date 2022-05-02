@@ -248,9 +248,9 @@ class AVLTreeList(object):
 				NewNode.setParent(CurrentNode)
 
 			else:
-				pre = self.getPredecessor(CurrentNode)
-				pre.setRight(NewNode)
-				NewNode.setParent(pre)
+				CurrentNode = self.getPredecessor(CurrentNode)
+				CurrentNode.setRight(NewNode)
+				NewNode.setParent(CurrentNode)
     
 		CurrentNode = NewNode.getParent()
 		AVLTreeList.changeHeight(NewNode)
@@ -284,17 +284,24 @@ class AVLTreeList(object):
 		
 				#Right Left
 				elif bf == -2 and AVLTreeList.getBalanceFactor(CurrentNode.right) == 1:
-					CurrentNode = AVLTreeList.rightLeftRotation(CurrentNode)
+					CurrentNode = AVLTreeList.leftRightRotation(CurrentNode)
 					rebalancingOperationCounter += 2
 		
 				#Left Right
 				elif bf == 2 and AVLTreeList.getBalanceFactor(CurrentNode.left) == -1:
-					CurrentNode = AVLTreeList.leftRightRotation(CurrentNode)
+					CurrentNode = AVLTreeList.rightLeftRotation(CurrentNode)
 					rebalancingOperationCounter += 2
 				break
 			CurrentNode = CurrentNode.getParent()
+   
+		sizenode = CurrentNode
+		if CurrentNode !=None:
+			sizenode = CurrentNode.getParent()
+   
+		while sizenode != None:
+			AVLTreeList.changeSize(sizenode)
+			sizenode = sizenode.getParent()
 		
-				
 		if NewNode.parent == self.firstItem:
 			if NewNode.getParent().left == NewNode:
 				self.firstItem = NewNode
@@ -403,30 +410,33 @@ class AVLTreeList(object):
 			
 			else: 	
 				#Left Left
-				if bf == 2 and (AVLTreeList.getBalanceFactor(CurrentNode.left) == 1 or AVLTreeList.getBalanceFactor(CurrentNode.left) == 0):
-					AVLTreeList.rightRotation(CurrentNode)
+				if bf == 2 and (AVLTreeList.getBalanceFactor(CurrentNode.left) == 1 or AVLTreeList.getBalanceFactor(CurrentNode.left) == 0):	
+					CurrentNode = AVLTreeList.rightRotation(CurrentNode)
 					rebalancingOperationCounter += 1
 		
 				#Right Right
 				elif bf == -2 and (AVLTreeList.getBalanceFactor(CurrentNode.right) == -1 or AVLTreeList.getBalanceFactor(CurrentNode.right) == 0):
-					AVLTreeList.leftRotation(CurrentNode)
+					CurrentNode = AVLTreeList.leftRotation(CurrentNode)
 					rebalancingOperationCounter += 1
 		
 				#Right Left
 				elif bf == -2 and AVLTreeList.getBalanceFactor(CurrentNode.right) == 1:
-					AVLTreeList.rightLeftRotation(CurrentNode)
+					CurrentNode = AVLTreeList.leftRightRotation(CurrentNode)
 					rebalancingOperationCounter += 2
 		
 				#Left Right
 				elif bf == 2 and AVLTreeList.getBalanceFactor(CurrentNode.left) == -1:
-					AVLTreeList.leftRightRotation(CurrentNode)
+					CurrentNode = AVLTreeList.rightLeftRotation(CurrentNode)
 					rebalancingOperationCounter += 2
 			CurrentNode = CurrentNode.getParent()
-   
+		
 		if node == self.firstItem:
 			self.firstItem = node.getParent
 		if node == self.lastItem:
 			self.lastItem = node.getParent
+   
+		while self.root.getParent() != None:
+			self.root = self.root.getParent()
    
 		self.len -= 1
 		return rebalancingOperationCounter
@@ -786,35 +796,54 @@ class AVLTreeList(object):
      
 		b = a.left
 		t = b.right
+		if a.parent != None:
+			if a.parent.right == a:
+				a.parent.setRight(b)
+			else:
+				a.parent.setLeft(b)
 		b.setRight(a)
 		b.setParent(a.getParent())
 		a.setParent(b)
 		a.setLeft(t)
+		t.setParent(a)
+
+		
+		AVLTreeList.changeHeight(a)
+		AVLTreeList.changeHeight(b)
+		
+		AVLTreeList.changeSize(a)
+		AVLTreeList.changeSize(b)
+		if b.parent != None:
+			AVLTreeList.changeHeight(b.parent)
+			AVLTreeList.changeSize(b.parent)
+		return b
+		
+	def leftRotation(a):
+		b = a.right
+		t = b.left
+		if a.parent != None:
+			if a.parent.right == a:
+				a.parent.setRight(b)
+			else:
+				a.parent.setLeft(b)
+		b.setLeft(a)
+		a.setRight(t)
+		b.setParent(a.getParent())
+		a.setParent(b)
 		t.setParent(a)
 		
 		AVLTreeList.changeHeight(a)
 		AVLTreeList.changeHeight(b)
 		AVLTreeList.changeSize(a)
 		AVLTreeList.changeSize(b)
-		return b
-		
-	def leftRotation(a):
-		b = a.right
-		t = b.left
-		b.setLeft(a)
-		a.setRight(t)
-		b.setParent(a.getParent())
-		a.setParent(b)
-		
-		AVLTreeList.changeHeight(a)
-		AVLTreeList.changeHeight(b)
-		AVLTreeList.changeSize(a)
-		AVLTreeList.changeSize(b)
+		if b.parent != None:
+			AVLTreeList.changeHeight(b.parent)
+			AVLTreeList.changeSize(b.parent)
 		return b
 
 	def rightLeftRotation(node):
 		node.setLeft(AVLTreeList.leftRotation(node.left))
-		return AVLTreeList.RightRotation(node)
+		return AVLTreeList.rightRotation(node)
      
 	def leftRightRotation(node):
 		node.setRight(AVLTreeList.rightRotation(node.right))
