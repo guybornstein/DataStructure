@@ -141,7 +141,7 @@ class AVLNode(object):
 
 
 	def isLeaf(self):
-		return (not self.left.isRealNode()) and (not self.right.isRealNode)
+		return ((not self.left.isRealNode()) or self.left == None) and ((not self.right.isRealNode()) or self.right == None)
 
 
 
@@ -335,12 +335,14 @@ class AVLTreeList(object):
 		  
 		# case 1: No children
 		if node.isLeaf():
-      	# case 1.1: only item
+      		# case 1.1: only item
 			if self.len == 1:
 				self.root = None
 				self.len = 0
+				self.firstItem = None
+				self.lastItem = None
 				return 0
-			if node.getParent().getLeft == node:
+			elif node.getParent().getLeft == node:
 				node.getParent().setLeft(AVLNode("fake"))
 			else:
 				node.getParent().setRight(AVLNode("fake"))
@@ -348,14 +350,20 @@ class AVLTreeList(object):
     
 		# case 2: one child
 		elif node.left.isRealNode() and not node.right.isRealNode:
-			if node.getParent().right == node:
+			if node.getParent() == None:
+				self.root = node.left
+				node.left.parent = None
+			elif node.getParent().right == node:
 				node.getParent().setRight(node.left)
 			else:
 				node.getParent().setLeft(node.left)
 			node.getLeft.setParent(node.getParent())
 
 		elif not node.left.isRealNode() and node.right.isRealNode:
-			if node.getParent().right == node:
+			if node.getParent() == None:
+				self.root = node.right
+				node.right.parent = None
+			elif node.getParent().right == node:
 				node.getParent().setRight(node.right)
 			else:
 				node.getParent().setLeft(node.right)
@@ -379,9 +387,9 @@ class AVLTreeList(object):
 					succ.getRight.setParent(succ.getParent())
 
 			#replace node by succ
-			succ.setParent(node.getParent)
-			succ.setRight(node.getRight)
-			succ.setLeft(node.getLeft)
+			succ.setParent(node.parent)
+			succ.setRight(node.right)
+			succ.setLeft(node.left)
 			node.right.setParent(succ)
 			node.left.setParent(succ)
 			if node.getParent().right == node:
@@ -431,9 +439,9 @@ class AVLTreeList(object):
 			CurrentNode = CurrentNode.getParent()
 		
 		if node == self.firstItem:
-			self.firstItem = node.getParent
+			self.firstItem = node.getParent()
 		if node == self.lastItem:
-			self.lastItem = node.getParent
+			self.lastItem = node.getParent()
    
 		while self.root.getParent() != None:
 			self.root = self.root.getParent()
@@ -949,3 +957,6 @@ class AVLTreeList(object):
 		return i
 
 
+T = AVLTreeList()
+T.insert(0, 1)
+T.delete(0)
