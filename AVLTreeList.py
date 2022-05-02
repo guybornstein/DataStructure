@@ -23,7 +23,7 @@ class AVLNode(object):
 		self.right = None
 		self.parent = None
 		self.height = -1
-		self.size = -1
+		self.size = 0
 		
 
 	"""returns the left child
