@@ -955,8 +955,3 @@ class AVLTreeList(object):
 		while row[i] == " ":
 			i += 1
 		return i
-
-
-T = AVLTreeList()
-T.insert(0, 1)
-T.delete(0)
