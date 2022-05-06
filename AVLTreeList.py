@@ -11,6 +11,9 @@
 
 
 
+import copy
+
+
 class AVLNode(object):
 	"""Constructor, you are allowed to add more fields. 
 
@@ -167,8 +170,7 @@ class AVLTreeList(object):
 	@returns: True if the list is empty, False otherwise
 	"""
 	def empty(self):
-		return self.root == None
-
+		return self.len == 0
 
 	"""retrieves the value of the i'th item in the list
 
@@ -328,11 +330,12 @@ class AVLTreeList(object):
 		
 		rebalancingOperationCounter = 0
      
-		if i >= self.len:
+		if i >= self.len or i<0 or self.empty():
 			return -1
 		node = self.retrieveNode(i)
+		nodeCopy = node
   
-		  
+
 		# case 1: No children
 		if node.isLeaf():
       		# case 1.1: only item
@@ -342,14 +345,14 @@ class AVLTreeList(object):
 				self.firstItem = None
 				self.lastItem = None
 				return 0
-			elif node.getParent().getLeft == node:
+			elif node.getParent().getLeft() == node:
 				node.getParent().setLeft(AVLNode("fake"))
 			else:
 				node.getParent().setRight(AVLNode("fake"))
-			
+		
     
 		# case 2: one child
-		elif node.left.isRealNode() and not node.right.isRealNode:
+		elif node.left.isRealNode() and not node.right.isRealNode():
 			if node.getParent() == None:
 				self.root = node.left
 				node.left.parent = None
@@ -357,7 +360,8 @@ class AVLTreeList(object):
 				node.getParent().setRight(node.left)
 			else:
 				node.getParent().setLeft(node.left)
-			node.getLeft.setParent(node.getParent())
+			node.left.setParent(node.getParent())
+			node = node.left
 
 		elif not node.left.isRealNode() and node.right.isRealNode:
 			if node.getParent() == None:
@@ -368,23 +372,27 @@ class AVLTreeList(object):
 			else:
 				node.getParent().setLeft(node.right)
 			node.right.setParent(node.getParent())
+			node = node.right
+
 		
 		# case 3: 2 children
 		else:
 			succ = self.getSuccessor(node)
+			succCopy = copy.copy(succ)
    
 			# delete succ
 			if succ.isLeaf():
-				if succ.getParent().getLeft == succ:
+				if succ.getParent().getLeft() == succ:
 					succ.getParent().setLeft(AVLNode("fake"))
 				else:
 					succ.getParent().setRight(AVLNode("fake"))
 			else: 
 				if succ.getParent().right == succ:
 					succ.getParent().setRight(succ.right)
+
 				else:
 					succ.getParent().setLeft(succ.right)
-					succ.getRight.setParent(succ.getParent())
+					succ.getRight().setParent(succ.getParent())
 
 			#replace node by succ
 			succ.setParent(node.parent)
@@ -392,16 +400,23 @@ class AVLTreeList(object):
 			succ.setLeft(node.left)
 			node.right.setParent(succ)
 			node.left.setParent(succ)
-			if node.getParent().right == node:
-				node.getParent().setRight(succ)
+			if node == self.root:
+				self.root = succ
 			else:
-				node.getParent().setLeft(succ)
+				if node.getParent().right == node:
+					node.getParent().setRight(succ)
+				else:
+					node.getParent().setLeft(succ)
+	
+			if succCopy.parent == node:
+				node = succ.right
+			else:
+				node = succCopy
     
     
 		#avl
 		CurrentNode = node.getParent()
-		AVLTreeList.changeHeight(CurrentNode)
-		AVLTreeList.changeSize(CurrentNode)
+
     
 		while CurrentNode != None:
 			prevHeight = CurrentNode.getHeight()
@@ -418,12 +433,12 @@ class AVLTreeList(object):
 			
 			else: 	
 				#Left Left
-				if bf == 2 and (AVLTreeList.getBalanceFactor(CurrentNode.left) == 1 or AVLTreeList.getBalanceFactor(CurrentNode.left) == 0):	
+				if bf == 2 and ((AVLTreeList.getBalanceFactor(CurrentNode.left) == 1) or (AVLTreeList.getBalanceFactor(CurrentNode.left) == 0)):
 					CurrentNode = AVLTreeList.rightRotation(CurrentNode)
 					rebalancingOperationCounter += 1
 		
 				#Right Right
-				elif bf == -2 and (AVLTreeList.getBalanceFactor(CurrentNode.right) == -1 or AVLTreeList.getBalanceFactor(CurrentNode.right) == 0):
+				elif bf == -2 and (AVLTreeList.getBalanceFactor(CurrentNode.right) == -1 or AVLTreeList.getBalanceFactor(CurrentNode.right) == -0):
 					CurrentNode = AVLTreeList.leftRotation(CurrentNode)
 					rebalancingOperationCounter += 1
 		
@@ -436,15 +451,39 @@ class AVLTreeList(object):
 				elif bf == 2 and AVLTreeList.getBalanceFactor(CurrentNode.left) == -1:
 					CurrentNode = AVLTreeList.rightLeftRotation(CurrentNode)
 					rebalancingOperationCounter += 2
+				
 			CurrentNode = CurrentNode.getParent()
-		
-		if node == self.firstItem:
-			self.firstItem = node.getParent()
-		if node == self.lastItem:
-			self.lastItem = node.getParent()
+   
+   
+		sizenode = CurrentNode
+		if CurrentNode !=None:
+			sizenode = CurrentNode.getParent()
+   
+		while sizenode != None:
+			AVLTreeList.changeSize(sizenode)
+			sizenode = sizenode.getParent()
+   
+		nodeSafe = nodeCopy
+		if nodeSafe == self.firstItem:
+			if nodeSafe.right.isRealNode():     		
+				while nodeSafe.right.isRealNode():
+					nodeSafe = nodeSafe.right
+				self.firstItem = nodeSafe
+			else:	
+				self.firstItem = nodeSafe.getParent()
+    
+    
+		if nodeCopy == self.lastItem:
+			if nodeCopy.left.isRealNode():     		
+				while nodeCopy.left.isRealNode():
+					nodeCopy = nodeCopy.left
+				self.lastItem = nodeCopy
+			else:
+				self.lastItem = nodeCopy.getParent()
    
 		while self.root.getParent() != None:
 			self.root = self.root.getParent()
+   
    
 		self.len -= 1
 		return rebalancingOperationCounter
@@ -462,6 +501,8 @@ class AVLTreeList(object):
 	@returns: the value of the first item, None if the list is empty
 	"""
 	def first(self):
+		if self.firstItem==None:
+			return None
 		return self.firstItem.getValue()
 		"""
 		if self.empty():
@@ -479,6 +520,8 @@ class AVLTreeList(object):
 	@returns: the value of the last item, None if the list is empty
 	"""
 	def last(self):
+		if self.lastItem==None:
+			return None
 		return self.lastItem.getValue()
 		"""
 		if self.empty():
@@ -955,3 +998,23 @@ class AVLTreeList(object):
 		while row[i] == " ":
 			i += 1
 		return i
+
+def check_BF(T):
+    for i in range(T.length()):
+        bf = AVLTreeList.getBalanceFactor(T.retrieveNode(i)) 
+        if bf != -1 and bf != 0 and bf != 1:
+            return False
+    return True
+	
+T = AVLTreeList()
+L = []
+for i in range(10):
+	T.append(i)
+	L.append(i)
+
+T.delete(T.length()//2)
+L.pop(len(L)//2)
+T.retrieve(5)
+
+T.delete(T.length()//2)
+L.pop(len(L)//2)
