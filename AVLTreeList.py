@@ -225,6 +225,9 @@ class AVLTreeList(object):
 		NewNode = AVLNode(val)
 		NewNode.setLeft(AVLNode("fake"))
 		NewNode.setRight(AVLNode("fake"))
+		NewNode.right.parent = NewNode
+		NewNode.left.parent = NewNode
+
 
 		CurrentNode = self.root
 
@@ -347,8 +350,11 @@ class AVLTreeList(object):
 				return 0
 			elif node.getParent().getLeft() == node:
 				node.getParent().setLeft(AVLNode("fake"))
+				node.parent.left.parent = node.parent
 			else:
 				node.getParent().setRight(AVLNode("fake"))
+				node.parent.right.parent = node.parent
+
 		
     
 		# case 2: one child
@@ -384,8 +390,11 @@ class AVLTreeList(object):
 			if succ.isLeaf():
 				if succ.getParent().getLeft() == succ:
 					succ.getParent().setLeft(AVLNode("fake"))
+					succ.parent.left.parent = succ.parent
 				else:
 					succ.getParent().setRight(AVLNode("fake"))
+					succ.parent.right.parent = succ.parent
+
 			else: 
 				if succ.getParent().right == succ:
 					succ.getParent().setRight(succ.right)
@@ -426,10 +435,10 @@ class AVLTreeList(object):
 			bf = AVLTreeList.getBalanceFactor(CurrentNode)
 
 			if -2 < bf and bf < 2:
-				if prevHeight == CurrentNode.getHeight():
-					break
-				else:
+				if prevHeight != CurrentNode.getHeight():
 					rebalancingOperationCounter += 1
+					#break
+
 			
 			else: 	
 				#Left Left
@@ -438,7 +447,7 @@ class AVLTreeList(object):
 					rebalancingOperationCounter += 1
 		
 				#Right Right
-				elif bf == -2 and (AVLTreeList.getBalanceFactor(CurrentNode.right) == -1 or AVLTreeList.getBalanceFactor(CurrentNode.right) == -0):
+				elif bf == -2 and (AVLTreeList.getBalanceFactor(CurrentNode.right) == -1 or AVLTreeList.getBalanceFactor(CurrentNode.right) == 0):
 					CurrentNode = AVLTreeList.leftRotation(CurrentNode)
 					rebalancingOperationCounter += 1
 		
@@ -483,6 +492,11 @@ class AVLTreeList(object):
    
 		while self.root.getParent() != None:
 			self.root = self.root.getParent()
+   
+		try:
+			AVLTreeList.changeHeight(succ)
+		except:
+			1==1
    
    
 		self.len -= 1
@@ -757,13 +771,13 @@ class AVLTreeList(object):
 	@returns: the first index that contains val, -1 if not found.
 	"""
 	def search(self, val):
-		if not self.root.isRealNode():
+		if self.root == None or not self.root.isRealNode():
 			return -1		
 		i = self.search_rec(self.root.left, val)
 		if i != -1:
 			return i
-		if self.root.getValue == val:
-			return self.getRank(self.root)
+		if self.root.value == val:
+			return self.getRank(self.root) - 1
 		return self.search_rec(self.root.right, val)
 
 	def search_rec(self, node, val):
@@ -772,8 +786,8 @@ class AVLTreeList(object):
 		i = self.search_rec(node.left, val)
 		if i != -1:
 			return i
-		if node.getValue == val:
-			return self.getRank(node)
+		if node.value == val:
+			return self.getRank(node) - 1
 		return self.search_rec(node.right, val) 
 		
 
@@ -912,13 +926,12 @@ class AVLTreeList(object):
 
 	def getRank(self, node):
 		tmp = node
-		parent = node.getParent()
-		a = node.left.getSize()
-		while tmp !=None:
-			if parent.getRight==node:
-				a=a+parent.getSize()+1
-				tmp = tmp.get_parent()
-				parent = tmp.get_parent()
+		a = node.left.getSize() + 1
+		while tmp.parent != None:
+			if tmp.parent.getRight()==tmp:
+				a = a+ tmp.parent.left.getSize()+1
+			tmp = tmp.parent
+
 		return a
 
 
@@ -927,7 +940,7 @@ class AVLTreeList(object):
 
 	def append(self, val):
 		n = self.len
-		self.insert(n, val)
+		return self.insert(n, val)
   
 	def getTreeHeight(self):
 		return self.root.getHeight()
@@ -1005,16 +1018,36 @@ def check_BF(T):
         if bf != -1 and bf != 0 and bf != 1:
             return False
     return True
+
+def in_order(tree, node, func):
+        if node is not None:
+            if node.isRealNode():
+                in_order(tree, node.getLeft(), func)
+                func(node, tree)
+                in_order(tree, node.getRight(), func)
+                
+                
+def check_family(node, tree):
+        if node == node.getLeft().getParent() and node == node.getRight().getParent():
+            print(str(node.value) + "family works")
+        else:
+            print(str(node.value) + "family fails")
+            
+def check_height(node, tree):
+        if node.getHeight() == max(node.getLeft().getHeight(), node.getRight().getHeight()) + 1:
+            print(str(node.value) + " height works")
+        else:
+            print(str(node.value) + " height fails")
+            
+def check_BF(node, tree):
+	if abs(node.getLeft().getHeight() - node.getRight().getHeight()) < 2:
+		print(str(node.value) + " BF works")
+	else:
+		print(str(node.value) + " BF fails")
 	
-T = AVLTreeList()
-L = []
-for i in range(10):
-	T.append(i)
-	L.append(i)
 
-T.delete(T.length()//2)
-L.pop(len(L)//2)
-T.retrieve(5)
+        
 
-T.delete(T.length()//2)
-L.pop(len(L)//2)
+
+
+
