@@ -709,37 +709,32 @@ class AVLTreeList(object):
   
   
 		CurrentNode = node
-		AVLTreeList.changeHeight(CurrentNode)
-		AVLTreeList.changeSize(CurrentNode)
     
 		while CurrentNode != None:
-			prevHeight = CurrentNode.getHeight()
 			AVLTreeList.changeHeight(CurrentNode)
 			AVLTreeList.changeSize(CurrentNode)
    
-			bf = AVLTreeList.getBalanceFactor(CurrentNode)
-
-			if -2 < bf and bf < 2:
-				if prevHeight == CurrentNode.getHeight():
-					break
+			bf = AVLTreeList.getBalanceFactor(CurrentNode)		
 			
-			else: 	
+			if -2 > bf or bf > 2:
 				#Left Left
-				if bf == 2 and (AVLTreeList.getBalanceFactor(CurrentNode.left) == 1 or AVLTreeList.getBalanceFactor(CurrentNode.left) == 0):
-					AVLTreeList.rightRotation(CurrentNode)
+				if bf == 2 and ((AVLTreeList.getBalanceFactor(CurrentNode.left) == 1) or (AVLTreeList.getBalanceFactor(CurrentNode.left) == 0)):
+					CurrentNode = AVLTreeList.rightRotation(CurrentNode)
 		
 				#Right Right
 				elif bf == -2 and (AVLTreeList.getBalanceFactor(CurrentNode.right) == -1 or AVLTreeList.getBalanceFactor(CurrentNode.right) == 0):
-					AVLTreeList.leftRotation(CurrentNode)
+					CurrentNode = AVLTreeList.leftRotation(CurrentNode)
 		
 				#Right Left
 				elif bf == -2 and AVLTreeList.getBalanceFactor(CurrentNode.right) == 1:
-					AVLTreeList.rightLeftRotation(CurrentNode)
+					CurrentNode = AVLTreeList.leftRightRotation(CurrentNode)
 		
 				#Left Right
 				elif bf == 2 and AVLTreeList.getBalanceFactor(CurrentNode.left) == -1:
-					AVLTreeList.leftRightRotation(CurrentNode)
+					CurrentNode = AVLTreeList.rightLeftRotation(CurrentNode)
+				
 			CurrentNode = CurrentNode.getParent()
+   
    
 			return right
    
