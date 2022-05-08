@@ -565,6 +565,11 @@ class AVLTreeList(object):
 			lst.append(node.getValue())
 			self.inOrder(node.right, lst)
 
+	def aaa(node, lst):
+		if node.isRealNode():
+			AVLTreeList.aaa(node.left, lst)
+			lst.append(node.getValue())
+			AVLTreeList.aaa(node.right, lst)
 	"""returns the size of the list 
 
 	@rtype: int
@@ -589,7 +594,7 @@ class AVLTreeList(object):
 		left = AVLTreeList()
 		right = AVLTreeList()
      
-		if node.left.isRealNode():
+		if node.left!=None and node.left.isRealNode():
 			left.root = node.left
 			left.len = node.left.getSize()
 			tmp = node.left
@@ -600,11 +605,12 @@ class AVLTreeList(object):
 			while tmp.right.isRealNode():
 				tmp = tmp.right
 			left.lastItem = tmp
+			left.root.parent = None
    
-		if node.right.isRealNode():
+		if node.right!=None and node.right.isRealNode():
 			right.root = node.right
 			right.len = node.right.getSize()
-			tmp = node.geRight()
+			tmp = node.right
 			while tmp.left.isRealNode():
 				tmp = tmp.left
 			right.firstItem = tmp
@@ -612,31 +618,40 @@ class AVLTreeList(object):
 			while tmp.right.isRealNode():
 				tmp = tmp.right
 			right.lastItem = tmp
+			right.root.parent = None
+
    
 		x = node.getParent()
 		prev = node
 		while x != None:
-			if x.right == prev:
-				left.root = AVLTreeList.join(x.left, x, left.root)
-				left.len += x.left.getSize() + 1
-				tmp = left.root()
-				while tmp.left.isRealNode():
-					tmp = tmp.left
-				left.firstItem = tmp
-			else:
-				right.root = AVLTreeList.join(right.root, x, x.right)
+			next = x.getParent()
+			if x.left == prev:
+				x.right.setParent(None)
+				if right.root!=None:
+					right.root.setParent(None)
 				right.len += x.right.getSize() + 1
-				tmp = right.root()
+				right.root = AVLTreeList.join(right.root, x, x.right)
+				tmp = right.getRoot()
 				while tmp.right.isRealNode():
 					tmp = tmp.right
 				right.lastItem = tmp
+			else:
+				x.left.setParent(None)
+				if left.root!=None:
+					left.root.setParent(None)
+				left.len += x.left.getSize() + 1
+				left.root = AVLTreeList.join(x.left, x, left.root)
+				tmp = left.getRoot()
+				while tmp.left.isRealNode():
+					tmp = tmp.left
+				left.firstItem = tmp
 
 			prev = x
-			x = x.getParent()
+			x = next
 			
 
   
-		return [left, node.getValue, right]
+		return [left, node.getValue(), right]
 
 	"""concatenates lst to self
 
@@ -648,13 +663,26 @@ class AVLTreeList(object):
 	def concat(self, lst):
 
 		if lst.empty():
-			return self.root.getHeight()
+			if self.empty():
+				return 0
+			return self.root.getHeight()+1
 		if self.empty():
 			self.root = lst.root
 			self.len = lst.len
 			self.firstItem = lst.firstItem
 			self.lastItem = lst.lastItem
-			return lst.root.getHeight()
+			return lst.root.getHeight()+1
+		if lst.length() == 1:
+			self.insert(self.length(),lst.firstItem.getValue())
+			return self.root.getHeight()-1
+		if self.length() == 1:
+			v = self.firstItem.getValue()
+			self.root = lst.root
+			self.len = lst.len
+			self.firstItem = lst.firstItem
+			self.lastItem = lst.lastItem
+			self.insert(0,v)
+			return lst.root.getHeight()-1
 
 		diff = self.root.getHeight() - lst.root.getHeight()
   
@@ -662,13 +690,12 @@ class AVLTreeList(object):
 	
 		self.delete(self.len - 1)
 		self.root = AVLTreeList.join(self.root, node, lst.root)
-		self.len += lst.len
+		self.len += lst.len+1
 		self.lastItem = lst.lastItem
 		return abs(diff)
 
 
 	def join(left, node, right):
-       
        
 		if not left.isRealNode():
 			tmp = AVLTreeList()
@@ -695,45 +722,53 @@ class AVLTreeList(object):
 				subtree = subtree.left
 
 			c = subtree.getParent()
-			if c != None:
-				c.setLeft(node)
 			node.setRight(subtree)
 			node.setLeft(left)
 			left.setParent(node)
 			subtree.setParent(node)
 			node.setParent(c)
-
+			if c == None:
+				c = AVLNode(node.value)
+				c.setLeft(left)
+				left.setParent(c)
+				c.setRight(subtree)
+				subtree.setParent(c)
+				AVLTreeList.changeHeight(c)
+				AVLTreeList.changeSize(c)
+				return c
+			else:
+				c.setLeft(node)
    
-		#rebalncing
+			#rebalncing
   
   
   
-		CurrentNode = node
+			CurrentNode = node
     
-		while CurrentNode != None:
-			AVLTreeList.changeHeight(CurrentNode)
-			AVLTreeList.changeSize(CurrentNode)
+			while CurrentNode != None:
+				AVLTreeList.changeHeight(CurrentNode)
+				AVLTreeList.changeSize(CurrentNode)
    
-			bf = AVLTreeList.getBalanceFactor(CurrentNode)		
+				bf = AVLTreeList.getBalanceFactor(CurrentNode)		
 			
-			if -2 > bf or bf > 2:
-				#Left Left
-				if bf == 2 and ((AVLTreeList.getBalanceFactor(CurrentNode.left) == 1) or (AVLTreeList.getBalanceFactor(CurrentNode.left) == 0)):
-					CurrentNode = AVLTreeList.rightRotation(CurrentNode)
+				if -2 > bf or bf > 2:
+					#Left Left
+					if bf == 2 and ((AVLTreeList.getBalanceFactor(CurrentNode.left) == 1) or (AVLTreeList.getBalanceFactor(CurrentNode.left) == 0)):
+						CurrentNode = AVLTreeList.rightRotation(CurrentNode)
+
+					#Right Right
+					elif bf == -2 and (AVLTreeList.getBalanceFactor(CurrentNode.right) == -1 or AVLTreeList.getBalanceFactor(CurrentNode.right) == 0):
+						CurrentNode = AVLTreeList.leftRotation(CurrentNode)
 		
-				#Right Right
-				elif bf == -2 and (AVLTreeList.getBalanceFactor(CurrentNode.right) == -1 or AVLTreeList.getBalanceFactor(CurrentNode.right) == 0):
-					CurrentNode = AVLTreeList.leftRotation(CurrentNode)
+					#Right Left
+					elif bf == -2 and AVLTreeList.getBalanceFactor(CurrentNode.right) == 1:
+						CurrentNode = AVLTreeList.leftRightRotation(CurrentNode)
 		
-				#Right Left
-				elif bf == -2 and AVLTreeList.getBalanceFactor(CurrentNode.right) == 1:
-					CurrentNode = AVLTreeList.leftRightRotation(CurrentNode)
-		
-				#Left Right
-				elif bf == 2 and AVLTreeList.getBalanceFactor(CurrentNode.left) == -1:
-					CurrentNode = AVLTreeList.rightLeftRotation(CurrentNode)
+					#Left Right
+					elif bf == 2 and AVLTreeList.getBalanceFactor(CurrentNode.left) == -1:
+						CurrentNode = AVLTreeList.rightLeftRotation(CurrentNode)
 				
-			CurrentNode = CurrentNode.getParent()
+				CurrentNode = CurrentNode.getParent()
    
    
 			return right
@@ -745,16 +780,50 @@ class AVLTreeList(object):
 				subtree = subtree.right
 
 			c = subtree.getParent()
-			if c != None:
-				c.setRight(node)
+
 			node.setLeft(subtree)
 			node.setRight(right)
 			right.setParent(node)
 			subtree.setParent(node)
 			node.setParent(c)
+			if c == None:
+				c = AVLNode(node.value)
+				c.setRight(right)
+				left.setParent(c)
+				c.setLeft(subtree)
+				subtree.setParent(c)
+				AVLTreeList.changeHeight(c)
+				AVLTreeList.changeSize(c)
+				return c
+			c.setRight(node)
+  
+			CurrentNode = node
+    
+			while CurrentNode != None:
 
+				AVLTreeList.changeHeight(CurrentNode)
+				AVLTreeList.changeSize(CurrentNode)
+   
+				bf = AVLTreeList.getBalanceFactor(CurrentNode)		
+			
+				if -2 > bf or bf > 2:
+					#Left Left
+					if bf == 2 and ((AVLTreeList.getBalanceFactor(CurrentNode.right) == 1) or (AVLTreeList.getBalanceFactor(CurrentNode.right) == 0)):
+						CurrentNode = AVLTreeList.rightRotation(CurrentNode)
 
-			#add here rebalncing from delete function from x upwords. Dont forget to update heights and sizes.
+					#Right Right
+					elif bf == -2 and (AVLTreeList.getBalanceFactor(CurrentNode.left) == -1 or AVLTreeList.getBalanceFactor(CurrentNode.left) == 0):
+						CurrentNode = AVLTreeList.leftRotation(CurrentNode)
+		
+					#Right Left
+					elif bf == -2 and AVLTreeList.getBalanceFactor(CurrentNode.left) == 1:
+						CurrentNode = AVLTreeList.leftRightRotation(CurrentNode)
+		
+					#Left Right
+					elif bf == 2 and AVLTreeList.getBalanceFactor(CurrentNode.right) == -1:
+						CurrentNode = AVLTreeList.rightLeftRotation(CurrentNode)
+				
+				CurrentNode = CurrentNode.getParent()
    
 			return left
 
@@ -1041,7 +1110,24 @@ def check_BF(node, tree):
 		print(str(node.value) + " BF fails")
 	
 
-        
+T1 = AVLTreeList()
+T2 = AVLTreeList()
+L1 = list()
+L2 = list()
+for i in range(10):
+	T1.append(i)
+	L1.append(i)
+for i in range(5):
+	T2.append(i)
+	L2.append(i)
+T1.printt()
+print(T1.listToArray())
+T2.printt()
+print(T2.listToArray())
+T1.concat(T2)
+L3 = L1+L2
+T1.printt()
+print(T1.listToArray())
 
 
 
