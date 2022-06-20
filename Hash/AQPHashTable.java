@@ -2,14 +2,16 @@ import java.util.Random;
 
 public class AQPHashTable extends OAHashTable {
 
+	private ModHash func;
+
 	public AQPHashTable(int m, long p) {
 		super(m);
-		// TODO Complete hash table constructor.
+		this.func = ModHash.GetFunc(m, p);
 	}
 	
 	@Override
 	public int Hash(long x, int i) {
-		// TODO implement hash function
-		return 0;
+		return (((func.Hash(x) + ((-1)^(i%2))*i^2) % this.size)+ this.size)%this.size;
+
 	}
 }
