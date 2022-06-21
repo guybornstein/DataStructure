@@ -12,6 +12,6 @@ public class QPHashTable extends OAHashTable {
 	
 	@Override
 	public int Hash(long x, int i) {
-		return (int)((func.Hash(x) + i^2) % this.size);
+		return (func.Hash(x) + i^2) % this.size;
 	}
 }
