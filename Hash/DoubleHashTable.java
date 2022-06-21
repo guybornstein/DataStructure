@@ -12,7 +12,7 @@ public class DoubleHashTable extends OAHashTable {
 	
 	@Override
 	public int Hash(long x, int i) {
-		return (this.func1.Hash(x)+ i * (1+this.func2.Hash(x))) % this.size;
+		return (int)((((long)(this.func1.Hash(x)) + (long)i * (long)(1+this.func2.Hash(x)))) % this.size);
 	}
 	
 }
